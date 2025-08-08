@@ -1,295 +1,829 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>AKW Lingua LMS — CRM Style</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Inter', 'sans-serif']
-          }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LinguaFlow Academy - Nowoczesna szkoła językowa online</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Animate.css for animations -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <!-- AOS for scroll animations -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <style type="text/tailwindcss">
+        @layer components {
+            .btn-primary {
+                @apply bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 transform hover:scale-105;
+            }
+            .btn-secondary {
+                @apply bg-white hover:bg-gray-100 text-indigo-600 font-bold py-3 px-6 rounded-lg border border-indigo-600 transition-all duration-300;
+            }
+            .card {
+                @apply bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300;
+            }
+            .input-field {
+                @apply w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent;
+            }
+            .nav-link {
+                @apply text-gray-700 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-300;
+            }
+            .feature-icon {
+                @apply flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white;
+            }
+            .testimonial-card {
+                @apply bg-gray-50 p-6 rounded-lg shadow-sm;
+            }
+            .language-badge {
+                @apply inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800;
+            }
         }
-      },
-      plugins: [tailwindcss.forms],
-    };
-  </script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
-  <style>
-    body { font-family: 'Inter', sans-serif; }
-  </style>
+    </style>
 </head>
-<body class="bg-gray-100">
-
-  <div id="root" class="min-h-screen flex flex-col"></div>
-
-  <script>
-    const seedCourses = [
-      {
-        id: crypto.randomUUID(),
-        slug: "angielski-a1",
-        language: "en",
-        level: "A1",
-        price: 199,
-        image: "https://source.unsplash.com/600x400/?english,language",
-        translations: [
-          { lang: "pl", title: "Angielski A1", description: "Podstawowy kurs języka angielskiego" }
-        ],
-        modules: [
-          {
-            id: crypto.randomUUID(),
-            title: "Moduł 1",
-            lessons: [
-              { id: crypto.randomUUID(), title: "Lekcja 1", content: "Wprowadzenie do alfabetu" },
-              { id: crypto.randomUUID(), title: "Lekcja 2", content: "Podstawowe zwroty i liczby" }
-            ]
-          }
-        ]
-      }
-    ];
-
-    function initStorage() {
-      if (!localStorage.getItem("courses")) {
-        localStorage.setItem("courses", JSON.stringify(seedCourses));
-      }
-      if (!localStorage.getItem("users")) {
-        localStorage.setItem("users", JSON.stringify([]));
-      }
-    }
-
-    function getCourses() {
-      return JSON.parse(localStorage.getItem("courses") || "[]");
-    }
-    function getUsers() {
-      return JSON.parse(localStorage.getItem("users") || "[]");
-    }
-    function saveUsers(users) {
-      localStorage.setItem("users", JSON.stringify(users));
-    }
-    function getCurrentUser() {
-      const id = localStorage.getItem("currentUserId");
-      return getUsers().find(u => u.id === id) || null;
-    }
-    function setCurrentUser(id) {
-      localStorage.setItem("currentUserId", id);
-    }
-    function logout() {
-      localStorage.removeItem("currentUserId");
-      render();
-    }
-
-    function register(name, email, password) {
-      const users = getUsers();
-      if (users.find(u => u.email === email)) {
-        alert("Email już istnieje.");
-        return;
-      }
-      const newUser = { id: crypto.randomUUID(), name, email, password, role: "student", orders: [], progress: {} };
-      users.push(newUser);
-      saveUsers(users);
-      setCurrentUser(newUser.id);
-      render();
-    }
-
-    function login(email, password) {
-      const user = getUsers().find(u => u.email === email && u.password === password);
-      if (!user) return alert("Nieprawidłowe dane logowania.");
-      setCurrentUser(user.id);
-      render();
-    }
-
-    function buyCourse(courseId) {
-      const user = getCurrentUser();
-      if (!user) return alert("Zaloguj się.");
-      if (!user.orders.includes(courseId)) user.orders.push(courseId);
-      saveUsers(getUsers().map(u => u.id === user.id ? user : u));
-      render();
-    }
-
-    function completeLesson(courseId, lessonId) {
-      const user = getCurrentUser();
-      if (!user.progress[courseId]) user.progress[courseId] = {};
-      user.progress[courseId][lessonId] = true;
-      saveUsers(getUsers().map(u => u.id === user.id ? user : u));
-      render();
-    }
-
-    function progress(course, user) {
-      const total = course.modules.reduce((sum, m) => sum + m.lessons.length, 0);
-      const done = Object.keys(user.progress[course.id] || {}).length;
-      return total ? Math.round((done / total) * 100) : 0;
-    }
-
-    function render() {
-      const root = document.getElementById("root");
-      const user = getCurrentUser();
-
-      root.innerHTML = `
-        <div class="flex flex-col md:flex-row h-screen">
-          <!-- Sidebar -->
-          <aside class="bg-white w-full md:w-64 p-4 border-r">
-            <h1 class="text-xl font-bold mb-4">AKW Lingua</h1>
-            <nav class="flex flex-col gap-2">
-              <button onclick="renderDashboard()" class="text-left text-gray-700 hover:text-blue-600">📊 Dashboard</button>
-              <button onclick="renderCourses()" class="text-left text-gray-700 hover:text-blue-600">📚 Kursy</button>
-              ${user ? `<button onclick="logout()" class="text-left text-red-600">🚪 Wyloguj (${user.name})</button>` : `
-                <button onclick="renderLogin()" class="text-left text-gray-700 hover:text-blue-600">🔐 Logowanie</button>
-                <button onclick="renderRegister()" class="text-left text-gray-700 hover:text-blue-600">📝 Rejestracja</button>
-              `}
-            </nav>
-          </aside>
-
-          <!-- Main -->
-          <main class="flex-1 p-6 overflow-y-auto" id="main"></main>
-        </div>
-      `;
-
-      renderDashboard();
-    }
-
-    function renderDashboard() {
-      const user = getCurrentUser();
-      const main = document.getElementById("main");
-      if (!user) {
-        main.innerHTML = `<p class="text-gray-600">Zaloguj się, aby zobaczyć swoje kursy.</p>`;
-        return;
-      }
-
-      const courses = getCourses().filter(c => user.orders.includes(c.id));
-      if (courses.length === 0) {
-        main.innerHTML = `<p class="text-gray-600">Nie masz jeszcze żadnych kursów. Przejdź do zakładki <strong>Kursy</strong>.</p>`;
-        return;
-      }
-
-      main.innerHTML = `
-        <h2 class="text-2xl font-semibold mb-4">Twój Dashboard</h2>
-        <div class="grid gap-4 sm:grid-cols-2">
-          ${courses.map(c => `
-            <div class="bg-white rounded shadow p-4 border">
-              <div class="font-semibold text-lg mb-1">${c.translations[0].title}</div>
-              <div class="text-sm text-gray-500 mb-2">Postęp: ${progress(c, user)}%</div>
-              <div class="w-full bg-gray-200 rounded h-2 mb-3">
-                <div class="bg-blue-500 h-2 rounded" style="width:${progress(c, user)}%"></div>
-              </div>
-              <button onclick="renderCourse('${c.slug}')" class="text-sm text-blue-600 underline">Przejdź do kursu</button>
-            </div>
-          `).join("")}
-        </div>
-      `;
-    }
-
-    function renderCourses() {
-      const courses = getCourses();
-      const user = getCurrentUser();
-      const main = document.getElementById("main");
-
-      main.innerHTML = `
-        <h2 class="text-2xl font-semibold mb-4">Dostępne kursy</h2>
-        <div class="grid gap-6 sm:grid-cols-2">
-          ${courses.map(c => `
-            <div class="bg-white rounded shadow border">
-              <img src="${c.image}" alt="" class="rounded-t h-40 w-full object-cover"/>
-              <div class="p-4">
-                <h3 class="font-semibold text-lg mb-1">${c.translations[0].title}</h3>
-                <p class="text-gray-600 text-sm mb-2">${c.translations[0].description}</p>
-                <div class="flex justify-between items-center text-sm">
-                  <span>${c.level} • ${c.language.toUpperCase()}</span>
-                  <strong>${c.price} PLN</strong>
+<body class="font-sans antialiased text-gray-800 bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 flex items-center">
+                        <i class="fas fa-language text-indigo-600 text-2xl mr-2"></i>
+                        <span class="text-xl font-bold text-indigo-600">LinguaFlow</span>
+                    </div>
+                    <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
+                        <a href="#home" class="nav-link">Strona główna</a>
+                        <a href="#features" class="nav-link">Funkcje</a>
+                        <a href="#courses" class="nav-link">Kursy</a>
+                        <a href="#pricing" class="nav-link">Cennik</a>
+                        <a href="#lms" class="nav-link">Platforma</a>
+                    </div>
                 </div>
-                <button onclick="renderCourse('${c.slug}')" class="mt-3 w-full bg-blue-600 text-white py-1 rounded hover:bg-blue-700">Zobacz</button>
-              </div>
+                <div class="hidden sm:ml-6 sm:flex sm:items-center">
+                    <a href="#login" class="nav-link mr-4">Zaloguj się</a>
+                    <a href="#register" class="btn-primary">Zapisz się teraz</a>
+                </div>
+                <div class="-mr-2 flex items-center sm:hidden">
+                    <button type="button" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500" aria-controls="mobile-menu" aria-expanded="false">
+                        <span class="sr-only">Open main menu</span>
+                        <i class="fas fa-bars"></i>
+                    </button>
+                </div>
             </div>
-          `).join("")}
         </div>
-      `;
-    }
 
-    function renderCourse(slug) {
-      const course = getCourses().find(c => c.slug === slug);
-      const user = getCurrentUser();
-      const bought = user?.orders.includes(course.id);
-      const main = document.getElementById("main");
+        <!-- Mobile menu -->
+        <div class="sm:hidden hidden" id="mobile-menu">
+            <div class="pt-2 pb-3 space-y-1">
+                <a href="#home" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-indigo-600 hover:bg-gray-50">Strona główna</a>
+                <a href="#features" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-indigo-600 hover:bg-gray-50">Funkcje</a>
+                <a href="#courses" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-indigo-600 hover:bg-gray-50">Kursy</a>
+                <a href="#pricing" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-indigo-600 hover:bg-gray-50">Cennik</a>
+                <a href="#lms" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-indigo-600 hover:bg-gray-50">Platforma</a>
+                <div class="border-t border-gray-200 pt-4 pb-3">
+                    <div class="flex items-center px-5">
+                        <a href="#login" class="btn-secondary w-full mr-2 text-center">Zaloguj się</a>
+                        <a href="#register" class="btn-primary w-full text-center">Rejestracja</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
 
-      main.innerHTML = `
-        <button onclick="renderCourses()" class="text-sm mb-4 text-blue-600 underline">← Powrót</button>
-        <h2 class="text-2xl font-semibold mb-1">${course.translations[0].title}</h2>
-        <p class="text-gray-600 mb-4">${course.translations[0].description}</p>
-        ${bought ? `<div class="text-green-600 font-medium mb-4">✅ Kurs zakupiony</div>` :
-        `<button onclick="buyCourse('${course.id}')" class="bg-green-600 text-white px-4 py-2 rounded mb-4 hover:bg-green-700">Kup za ${course.price} PLN</button>`}
-        ${course.modules.map(m => `
-          <div class="mb-4">
-            <h3 class="font-semibold">${m.title}</h3>
-            <ul class="list-disc pl-5 mt-2 text-sm">
-              ${m.lessons.map(l => `
-                <li>
-                  ${bought
-                    ? `<button onclick="renderLesson('${course.id}', '${l.id}')" class="text-blue-600 underline">${l.title}</button>
-                       ${user?.progress?.[course.id]?.[l.id] ? "✅" : ""}`
-                    : `<span class="text-gray-500">${l.title}</span>`}
-                </li>
-              `).join("")}
-            </ul>
-          </div>
-        `).join("")}
-      `;
-    }
+    <!-- Hero Section -->
+    <section id="home" class="bg-gradient-to-r from-indigo-500 to-purple-600 text-white py-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="md:flex md:items-center md:justify-between">
+                <div class="md:w-1/2 mb-10 md:mb-0" data-aos="fade-right">
+                    <h1 class="text-4xl md:text-5xl font-bold leading-tight mb-6">Naucz się języka szybko i skutecznie</h1>
+                    <p class="text-xl mb-8">Odkryj naszą innowacyjną platformę LMS, która dostosowuje się do Twojego stylu nauki i pomaga osiągnąć płynność językową.</p>
+                    <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+                        <a href="#register" class="btn-primary animate__animated animate__pulse animate__infinite"><i class="fas fa-rocket mr-2"></i> Rozpocznij naukę</a>
+                        <a href="#demo" class="btn-secondary"><i class="fas fa-play-circle mr-2"></i> Zobacz demo</a>
+                    </div>
+                </div>
+                <div class="md:w-1/2" data-aos="fade-left">
+                    <img src="https://images.unsplash.com/photo-1546410531-bb4caa6b424d?ixlib=rb-1.2.1&auto=format&fit=crop&w=634&q=80" alt="Learning languages" class="rounded-lg shadow-2xl">
+                </div>
+            </div>
+        </div>
+    </section>
 
-    function renderLesson(courseId, lessonId) {
-      const course = getCourses().find(c => c.id === courseId);
-      const lesson = course.modules.flatMap(m => m.lessons).find(l => l.id === lessonId);
-      const main = document.getElementById("main");
+    <!-- Stats Section -->
+    <section class="bg-white py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+                <div class="p-6" data-aos="fade-up">
+                    <div class="text-4xl font-bold text-indigo-600 mb-2">10,000+</div>
+                    <div class="text-gray-600">Zadowolonych uczniów</div>
+                </div>
+                <div class="p-6" data-aos="fade-up" data-aos-delay="100">
+                    <div class="text-4xl font-bold text-indigo-600 mb-2">12</div>
+                    <div class="text-gray-600">Języków do wyboru</div>
+                </div>
+                <div class="p-6" data-aos="fade-up" data-aos-delay="200">
+                    <div class="text-4xl font-bold text-indigo-600 mb-2">98%</div>
+                    <div class="text-gray-600">Skuteczności metod</div>
+                </div>
+                <div class="p-6" data-aos="fade-up" data-aos-delay="300">
+                    <div class="text-4xl font-bold text-indigo-600 mb-2">24/7</div>
+                    <div class="text-gray-600">Dostęp do platformy</div>
+                </div>
+            </div>
+        </div>
+    </section>
 
-      main.innerHTML = `
-        <button onclick="renderCourse('${course.slug}')" class="text-sm mb-4 text-blue-600 underline">← Powrót</button>
-        <h2 class="text-xl font-semibold mb-2">${lesson.title}</h2>
-        <p class="mb-4 text-gray-700">${lesson.content}</p>
-        <button onclick="completeLesson('${course.id}', '${lesson.id}')" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Oznacz jako ukończoną</button>
-      `;
-    }
+    <!-- Features Section -->
+    <section id="features" class="py-20 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl font-bold text-gray-900 mb-4" data-aos="fade-up">Dlaczego LinguaFlow?</h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto" data-aos="fade-up" data-aos-delay="100">Innowacyjne podejście do nauki języków obcych</p>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-10">
+                <div class="card p-8" data-aos="fade-up">
+                    <div class="feature-icon mb-6">
+                        <i class="fas fa-robot text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">Personalizacja z AI</h3>
+                    <p class="text-gray-600">Nasza platforma wykorzystuje sztuczną inteligencję, aby dostosować materiały i tempo nauki do Twoich potrzeb i postępów.</p>
+                </div>
+                
+                <div class="card p-8" data-aos="fade-up" data-aos-delay="100">
+                    <div class="feature-icon mb-6">
+                        <i class="fas fa-chalkboard-teacher text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">Native Speakerzy</h3>
+                    <p class="text-gray-600">Ucz się od najlepszych - nasi lektorzy to native speakerzy z różnych zakątków świata, którzy pomogą Ci opanować autentyczny akcent.</p>
+                </div>
+                
+                <div class="card p-8" data-aos="fade-up" data-aos-delay="200">
+                    <div class="feature-icon mb-6">
+                        <i class="fas fa-gamepad text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">Gamifikacja</h3>
+                    <p class="text-gray-600">System punktów, odznak i rankingów sprawia, że nauka staje się zabawą i motywuje do regularnej pracy.</p>
+                </div>
+                
+                <div class="card p-8" data-aos="fade-up">
+                    <div class="feature-icon mb-6">
+                        <i class="fas fa-mobile-alt text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">Aplikacja mobilna</h3>
+                    <p class="text-gray-600">Ucz się gdzie chcesz i kiedy chcesz dzięki naszej aplikacji dostępnej na iOS i Android.</p>
+                </div>
+                
+                <div class="card p-8" data-aos="fade-up" data-aos-delay="100">
+                    <div class="feature-icon mb-6">
+                        <i class="fas fa-chart-line text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">Śledzenie postępów</h3>
+                    <p class="text-gray-600">Dokładne statystyki i wykresy pokazują Twoje postępy w nauce i obszary wymagające poprawy.</p>
+                </div>
+                
+                <div class="card p-8" data-aos="fade-up" data-aos-delay="200">
+                    <div class="feature-icon mb-6">
+                        <i class="fas fa-certificate text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">Certyfikaty</h3>
+                    <p class="text-gray-600">Otrzymaj oficjalny certyfikat po ukończeniu każdego poziomu, uznawany przez pracodawców na całym świecie.</p>
+                </div>
+            </div>
+        </div>
+    </section>
 
-    function renderLogin() {
-      const main = document.getElementById("main");
-      main.innerHTML = `
-        <h2 class="text-2xl font-semibold mb-4">Logowanie</h2>
-        <form onsubmit="handleLogin(event)" class="space-y-4 max-w-sm">
-          <input required name="email" type="email" class="w-full border p-2 rounded" placeholder="Email">
-          <input required name="password" type="password" class="w-full border p-2 rounded" placeholder="Hasło">
-          <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Zaloguj się</button>
-        </form>
-      `;
-    }
+    <!-- LMS Platform Preview -->
+    <section id="lms" class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="md:flex md:items-center md:space-x-12">
+                <div class="md:w-1/2 mb-10 md:mb-0" data-aos="fade-right">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6">Nasza platforma LMS</h2>
+                    <p class="text-lg text-gray-600 mb-6">Nowoczesne narzędzie do nauki języków, które łączy w sobie najlepsze cechy tradycyjnej szkoły językowej z wygodą nauki online.</p>
+                    
+                    <ul class="space-y-4 mb-8">
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-indigo-600 mt-1 mr-3"></i>
+                            <span class="text-gray-700">Interaktywne lekcje z automatyczną oceną odpowiedzi</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-indigo-600 mt-1 mr-3"></i>
+                            <span class="text-gray-700">Wirtualne klasy z możliwością pracy w grupach</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-indigo-600 mt-1 mr-3"></i>
+                            <span class="text-gray-700">Biblioteka materiałów dostępna 24/7</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-indigo-600 mt-1 mr-3"></i>
+                            <span class="text-gray-700">System powtórek oparty na badaniach naukowych</span>
+                        </li>
+                    </ul>
+                    
+                    <a href="#demo" class="btn-primary inline-flex items-center">
+                        <i class="fas fa-play mr-2"></i> Zobacz demo platformy
+                    </a>
+                </div>
+                
+                <div class="md:w-1/2" data-aos="fade-left">
+                    <div class="relative">
+                        <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80" alt="LMS Platform" class="rounded-lg shadow-xl">
+                        <div class="absolute -bottom-6 -right-6 bg-white p-4 rounded-lg shadow-lg w-2/3">
+                            <div class="flex items-center mb-2">
+                                <div class="h-3 w-3 bg-green-500 rounded-full mr-2"></div>
+                                <span class="text-sm font-medium">Aktywna lekcja</span>
+                            </div>
+                            <h4 class="font-bold mb-1">Konwersacje biznesowe</h4>
+                            <p class="text-sm text-gray-600">Rozmowa kwalifikacyjna w języku angielskim</p>
+                            <div class="mt-3 flex justify-between items-center">
+                                <div class="flex items-center">
+                                    <i class="fas fa-user-circle text-indigo-600 mr-2"></i>
+                                    <span class="text-sm">Anna K. - native speaker</span>
+                                </div>
+                                <span class="text-xs bg-indigo-100 text-indigo-800 px-2 py-1 rounded">LIVE</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 
-    function handleLogin(e) {
-      e.preventDefault();
-      const f = e.target;
-      login(f.email.value, f.password.value);
-    }
+    <!-- Courses Section -->
+    <section id="courses" class="py-20 bg-indigo-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl font-bold text-gray-900 mb-4" data-aos="fade-up">Nasze kursy językowe</h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto" data-aos="fade-up" data-aos-delay="100">Wybierz kurs dopasowany do Twoich potrzeb</p>
+            </div>
+            
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="card overflow-hidden" data-aos="fade-up">
+                    <div class="h-48 bg-indigo-600 flex items-center justify-center">
+                        <i class="fas fa-briefcase text-white text-6xl"></i>
+                    </div>
+                    <div class="p-6">
+                        <span class="language-badge mb-3">Angielski</span>
+                        <h3 class="text-xl font-bold mb-3">Angielski biznesowy</h3>
+                        <p class="text-gray-600 mb-4">Kurs przygotowujący do komunikacji w środowisku korporacyjnym, prowadzenia prezentacji i negocjacji.</p>
+                        <div class="flex justify-between items-center">
+                            <span class="font-bold text-indigo-600">od 199 zł/mc</span>
+                            <a href="#" class="text-indigo-600 hover:text-indigo-800 font-medium">Dowiedz się więcej →</a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card overflow-hidden" data-aos="fade-up" data-aos-delay="100">
+                    <div class="h-48 bg-purple-600 flex items-center justify-center">
+                        <i class="fas fa-graduation-cap text-white text-6xl"></i>
+                    </div>
+                    <div class="p-6">
+                        <span class="language-badge mb-3">Włoski</span>
+                        <h3 class="text-xl font-bold mb-3">Włoski od podstaw</h3>
+                        <p class="text-gray-600 mb-4">Kompleksowy kurs dla początkujących, który wprowadzi Cię w świat języka włoskiego i kultury Włoch.</p>
+                        <div class="flex justify-between items-center">
+                            <span class="font-bold text-indigo-600">od 149 zł/mc</span>
+                            <a href="#" class="text-indigo-600 hover:text-indigo-800 font-medium">Dowiedz się więcej →</a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card overflow-hidden" data-aos="fade-up" data-aos-delay="200">
+                    <div class="h-48 bg-green-600 flex items-center justify-center">
+                        <i class="fas fa-child text-white text-6xl"></i>
+                    </div>
+                    <div class="p-6">
+                        <span class="language-badge mb-3">Hiszpański</span>
+                        <h3 class="text-xl font-bold mb-3">Hiszpański dla dzieci</h3>
+                        <p class="text-gray-600 mb-4">Kurs oparty na zabawie, który wprowadza dzieci w świat języka hiszpańskiego poprzez gry i piosenki.</p>
+                        <div class="flex justify-between items-center">
+                            <span class="font-bold text-indigo-600">od 129 zł/mc</span>
+                            <a href="#" class="text-indigo-600 hover:text-indigo-800 font-medium">Dowiedz się więcej →</a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card overflow-hidden" data-aos="fade-up">
+                    <div class="h-48 bg-yellow-500 flex items-center justify-center">
+                        <i class="fas fa-plane text-white text-6xl"></i>
+                    </div>
+                    <div class="p-6">
+                        <span class="language-badge mb-3">Francuski</span>
+                        <h3 class="text-xl font-bold mb-3">Francuski w podróży</h3>
+                        <p class="text-gray-600 mb-4">Praktyczny kurs przygotowujący do podróży do krajów francuskojęzycznych.</p>
+                        <div class="flex justify-between items-center">
+                            <span class="font-bold text-indigo-600">od 99 zł/mc</span>
+                            <a href="#" class="text-indigo-600 hover:text-indigo-800 font-medium">Dowiedz się więcej →</a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card overflow-hidden" data-aos="fade-up" data-aos-delay="100">
+                    <div class="h-48 bg-red-600 flex items-center justify-center">
+                        <i class="fas fa-flask text-white text-6xl"></i>
+                    </div>
+                    <div class="p-6">
+                        <span class="language-badge mb-3">Niemiecki</span>
+                        <h3 class="text-xl font-bold mb-3">Niemiecki techniczny</h3>
+                        <p class="text-gray-600 mb-4">Specjalistyczny kurs dla inżynierów i techników pracujących w niemieckojęzycznych firmach.</p>
+                        <div class="flex justify-between items-center">
+                            <span class="font-bold text-indigo-600">od 229 zł/mc</span>
+                            <a href="#" class="text-indigo-600 hover:text-indigo-800 font-medium">Dowiedz się więcej →</a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card overflow-hidden" data-aos="fade-up" data-aos-delay="200">
+                    <div class="h-48 bg-blue-600 flex items-center justify-center">
+                        <i class="fas fa-star text-white text-6xl"></i>
+                    </div>
+                    <div class="p-6">
+                        <span class="language-badge mb-3">Wiele języków</span>
+                        <h3 class="text-xl font-bold mb-3">Pakiet Premium</h3>
+                        <p class="text-gray-600 mb-4">Nielimitowany dostęp do wszystkich kursów językowych na naszej platformie.</p>
+                        <div class="flex justify-between items-center">
+                            <span class="font-bold text-indigo-600">od 299 zł/mc</span>
+                            <a href="#" class="text-indigo-600 hover:text-indigo-800 font-medium">Dowiedz się więcej →</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center mt-12" data-aos="fade-up">
+                <a href="#all-courses" class="btn-secondary">
+                    <i class="fas fa-list mr-2"></i> Zobacz wszystkie kursy
+                </a>
+            </div>
+        </div>
+    </section>
 
-    function renderRegister() {
-      const main = document.getElementById("main");
-      main.innerHTML = `
-        <h2 class="text-2xl font-semibold mb-4">Rejestracja</h2>
-        <form onsubmit="handleRegister(event)" class="space-y-4 max-w-sm">
-          <input required name="name" class="w-full border p-2 rounded" placeholder="Imię">
-          <input required name="email" type="email" class="w-full border p-2 rounded" placeholder="Email">
-          <input required name="password" type="password" class="w-full border p-2 rounded" placeholder="Hasło">
-          <button class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Zarejestruj się</button>
-        </form>
-      `;
-    }
+    <!-- Pricing Section -->
+    <section id="pricing" class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl font-bold text-gray-900 mb-4" data-aos="fade-up">Wybierz plan dla siebie</h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto" data-aos="fade-up" data-aos-delay="100">Elastyczne pakiety dostosowane do Twoich potrzeb</p>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+                <div class="card border-2 border-gray-200 p-8" data-aos="fade-up">
+                    <h3 class="text-xl font-bold text-center mb-4">Basic</h3>
+                    <div class="text-center mb-6">
+                        <span class="text-4xl font-bold">149</span>
+                        <span class="text-xl text-gray-600">zł/miesiąc</span>
+                    </div>
+                    <ul class="space-y-3 mb-8">
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-green-500 mt-1 mr-3"></i>
+                            <span>1 język do wyboru</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-green-500 mt-1 mr-3"></i>
+                            <span>Dostęp do platformy 24/7</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-green-500 mt-1 mr-3"></i>
+                            <span>4 lekcje z lektorem miesięcznie</span>
+                        </li>
+                        <li class="flex items-start text-gray-400">
+                            <i class="fas fa-times mt-1 mr-3"></i>
+                            <span>Brak dostępu do grupowych lekcji live</span>
+                        </li>
+                        <li class="flex items-start text-gray-400">
+                            <i class="fas fa-times mt-1 mr-3"></i>
+                            <span>Brak certyfikatów</span>
+                        </li>
+                    </ul>
+                    <a href="#register" class="btn-secondary w-full text-center">Wybieram</a>
+                </div>
+                
+                <div class="card border-2 border-indigo-600 transform scale-105 relative" data-aos="fade-up" data-aos-delay="100">
+                    <div class="absolute top-0 right-0 bg-indigo-600 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">NAJPOPULARNIEJSZE</div>
+                    <div class="p-8">
+                        <h3 class="text-xl font-bold text-center mb-4">Premium</h3>
+                        <div class="text-center mb-6">
+                            <span class="text-4xl font-bold">249</span>
+                            <span class="text-xl text-gray-600">zł/miesiąc</span>
+                        </div>
+                        <ul class="space-y-3 mb-8">
+                            <li class="flex items-start">
+                                <i class="fas fa-check text-green-500 mt-1 mr-3"></i>
+                                <span>2 języki do wyboru</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check text-green-500 mt-1 mr-3"></i>
+                                <span>Dostęp do platformy 24/7</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check text-green-500 mt-1 mr-3"></i>
+                                <span>8 lekcji z lektorem miesięcznie</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check text-green-500 mt-1 mr-3"></i>
+                                <span>Dostęp do grupowych lekcji live</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check text-green-500 mt-1 mr-3"></i>
+                                <span>Certyfikaty po każdym poziomie</span>
+                            </li>
+                        </ul>
+                        <a href="#register" class="btn-primary w-full text-center">Wybieram</a>
+                    </div>
+                </div>
+                
+                <div class="card border-2 border-gray-200 p-8" data-aos="fade-up" data-aos-delay="200">
+                    <h3 class="text-xl font-bold text-center mb-4">Business</h3>
+                    <div class="text-center mb-6">
+                        <span class="text-4xl font-bold">399</span>
+                        <span class="text-xl text-gray-600">zł/miesiąc</span>
+                    </div>
+                    <ul class="space-y-3 mb-8">
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-green-500 mt-1 mr-3"></i>
+                            <span>Nieograniczona liczba języków</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-green-500 mt-1 mr-3"></i>
+                            <span>Dostęp do platformy 24/7</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-green-500 mt-1 mr-3"></i>
+                            <span>12 lekcji z lektorem miesięcznie</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-green-500 mt-1 mr-3"></i>
+                            <span>Nielimitowane lekcje grupowe</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-green-500 mt-1 mr-3"></i>
+                            <span>Certyfikaty i raporty postępów</span>
+                        </li>
+                    </ul>
+                    <a href="#register" class="btn-secondary w-full text-center">Wybieram</a>
+                </div>
+            </div>
+            
+            <div class="text-center mt-12" data-aos="fade-up">
+                <p class="text-gray-600 mb-4">Potrzebujesz indywidualnego rozwiązania dla firmy?</p>
+                <a href="#contact" class="text-indigo-600 hover:text-indigo-800 font-medium">
+                    <i class="fas fa-envelope mr-2"></i> Skontaktuj się z nami
+                </a>
+            </div>
+        </div>
+    </section>
 
-    function handleRegister(e) {
-      e.preventDefault();
-      const f = e.target;
-      register(f.name.value, f.email.value, f.password.value);
-    }
+    <!-- Testimonials Section -->
+    <section class="py-20 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl font-bold text-gray-900 mb-4" data-aos="fade-up">Opinie naszych uczniów</h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto" data-aos="fade-up" data-aos-delay="100">Poznaj doświadczenia osób, które już korzystają z naszej platformy</p>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="testimonial-card" data-aos="fade-up">
+                    <div class="flex items-center mb-4">
+                        <img src="https://randomuser.me/api/portraits/women/32.jpg" alt="Anna Nowak" class="w-12 h-12 rounded-full mr-4">
+                        <div>
+                            <h4 class="font-bold">Anna Nowak</h4>
+                            <div class="flex text-yellow-400">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-gray-600">"Dzięki LinguaFlow w końcu przełamałam barierę językową. System powtórek i świetni lektorzy sprawili, że po 6 miesiącach mogę swobodnie prowadzić rozmowy biznesowe po angielsku."</p>
+                </div>
+                
+                <div class="testimonial-card" data-aos="fade-up" data-aos-delay="100">
+                    <div class="flex items-center mb-4">
+                        <img src="https://randomuser.me/api/portraits/men/54.jpg" alt="Marek Kowalski" class="w-12 h-12 rounded-full mr-4">
+                        <div>
+                            <h4 class="font-bold">Marek Kowalski</h4>
+                            <div class="flex text-yellow-400">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-gray-600">"Jako osoba zapracowana doceniam możliwość nauki kiedy mam czas. Aplikacja mobilna pozwala mi wykorzystać każdą wolną chwilę w kolejce czy w komunikacji."</p>
+                </div>
+                
+                <div class="testimonial-card" data-aos="fade-up" data-aos-delay="200">
+                    <div class="flex items-center mb-4">
+                        <img src="https://randomuser.me/api/portraits/women/68.jpg" alt="Katarzyna Wiśniewska" class="w-12 h-12 rounded-full mr-4">
+                        <div>
+                            <h4 class="font-bold">Katarzyna Wiśniewska</h4>
+                            <div class="flex text-yellow-400">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star-half-alt"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-gray-600">"Moje dzieci uwielbiają lekcje przez platformę - gry i zabawy językowe sprawiają, że nauka to dla nich przyjemność, a nie obowiązek. Widzę ogromne postępy!"</p>
+                </div>
+            </div>
+        </div>
+    </section>
 
-    // Init
-    initStorage();
-    render();
-  </script>
+    <!-- CTA Section -->
+    <section class="py-20 bg-gradient-to-r from-indigo-600 to-purple-700 text-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 class="text-3xl font-bold mb-6" data-aos="fade-up">Gotowy, aby rozpocząć swoją przygodę z językiem?</h2>
+            <p class="text-xl mb-8 max-w-3xl mx-auto" data-aos="fade-up" data-aos-delay="100">Wypróbuj naszą platformę przez 7 dni za darmo. Bez zobowiązań, bez karty kredytowej.</p>
+            <div class="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4" data-aos="fade-up" data-aos-delay="200">
+                <a href="#register" class="btn-primary bg-white text-indigo-600 hover:bg-gray-100 px-8">
+                    <i class="fas fa-play-circle mr-2"></i> Rozpocznij darmowy okres
+                </a>
+                <a href="#contact" class="btn-secondary border-white text-white hover:bg-white hover:text-indigo-600 px-8">
+                    <i class="fas fa-question-circle mr-2"></i> Masz pytania?
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="py-20 bg-white">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl font-bold text-gray-900 mb-4" data-aos="fade-up">Najczęściej zadawane pytania</h2>
+                <p class="text-xl text-gray-600" data-aos="fade-up" data-aos-delay="100">Znajdź odpowiedzi na swoje pytania</p>
+            </div>
+            
+            <div class="space-y-6">
+                <div class="border border-gray-200 rounded-lg overflow-hidden" data-aos="fade-up">
+                    <button class="faq-toggle w-full flex justify-between items-center p-6 bg-gray-50 hover:bg-gray-100 transition-colors duration-300">
+                        <h3 class="text-lg font-medium text-left">Jak działa darmowy okres próbny?</h3>
+                        <i class="fas fa-chevron-down text-indigo-600 transition-transform duration-300"></i>
+                    </button>
+                    <div class="faq-content hidden px-6 pb-6 pt-2">
+                        <p class="text-gray-600">Darmowy okres próbny trwa 7 dni i daje pełny dostęp do platformy oraz 1 lekcję z lektorem. Nie wymagamy podania danych karty kredytowej. Jeśli w ciągu tych 7 dni zrezygnujesz, nie poniesiesz żadnych kosztów. Jeśli zostaniesz, automatycznie rozpoczniemy naliczanie opłat według wybranego planu.</p>
+                    </div>
+                </div>
+                
+                <div class="border border-gray-200 rounded-lg overflow-hidden" data-aos="fade-up" data-aos-delay="100">
+                    <button class="faq-toggle w-full flex justify-between items-center p-6 bg-gray-50 hover:bg-gray-100 transition-colors duration-300">
+                        <h3 class="text-lg font-medium text-left">Czy mogę zmienić język w trakcie trwania kursu?</h3>
+                        <i class="fas fa-chevron-down text-indigo-600 transition-transform duration-300"></i>
+                    </button>
+                    <div class="faq-content hidden px-6 pb-6 pt-2">
+                        <p class="text-gray-600">Tak, w każdej chwili możesz zmienić język nauki. W planach Basic i Premium możesz wybrać odpowiednio 1 lub 2 języki jednocześnie. W planie Business nie ma ograniczeń co do liczby języków. Twoje postępy w każdym języku są zapisywane osobno, więc możesz wrócić do nauki w dowolnym momencie.</p>
+                    </div>
+                </div>
+                
+                <div class="border border-gray-200 rounded-lg overflow-hidden" data-aos="fade-up" data-aos-delay="200">
+                    <button class="faq-toggle w-full flex justify-between items-center p-6 bg-gray-50 hover:bg-gray-100 transition-colors duration-300">
+                        <h3 class="text-lg font-medium text-left">Jak wyglądają lekcje z lektorem?</h3>
+                        <i class="fas fa-chevron-down text-indigo-600 transition-transform duration-300"></i>
+                    </button>
+                    <div class="faq-content hidden px-6 pb-6 pt-2">
+                        <p class="text-gray-600">Lekcje odbywają się na naszej platformie w wirtualnych klasach. Możesz wybrać lekcję indywidualną lub dołączyć do grupy (w zależności od planu). Każda lekcja jest prowadzona przez wykwalifikowanego lektora lub native speakera. Przed lekcją otrzymasz materiały do przygotowania, a po lekcji - zadanie domowe i dostęp do nagrania.</p>
+                    </div>
+                </div>
+                
+                <div class="border border-gray-200 rounded-lg overflow-hidden" data-aos="fade-up">
+                    <button class="faq-toggle w-full flex justify-between items-center p-6 bg-gray-50 hover:bg-gray-100 transition-colors duration-300">
+                        <h3 class="text-lg font-medium text-left">Czy otrzymam certyfikat po ukończeniu kursu?</h3>
+                        <i class="fas fa-chevron-down text-indigo-600 transition-transform duration-300"></i>
+                    </button>
+                    <div class="faq-content hidden px-6 pb-6 pt-2">
+                        <p class="text-gray-600">Tak, w planach Premium i Business otrzymujesz certyfikat po ukończeniu każdego poziomu (A1, A2, B1 itd.). Certyfikat zawiera informacje o osiągniętym poziomie, liczbie godzin nauki i zakresie materiału. Nasze certyfikaty są uznawane przez wielu pracodawców w Polsce i za granicą.</p>
+                    </div>
+                </div>
+                
+                <div class="border border-gray-200 rounded-lg overflow-hidden" data-aos="fade-up" data-aos-delay="100">
+                    <button class="faq-toggle w-full flex justify-between items-center p-6 bg-gray-50 hover:bg-gray-100 transition-colors duration-300">
+                        <h3 class="text-lg font-medium text-left">Jak mogę płacić za kurs?</h3>
+                        <i class="fas fa-chevron-down text-indigo-600 transition-transform duration-300"></i>
+                    </button>
+                    <div class="faq-content hidden px-6 pb-6 pt-2">
+                        <p class="text-gray-600">Akceptujemy płatności kartą kredytową/debetową (Visa, Mastercard), przelewem bankowym oraz przez PayPal. Płatności są realizowane w systemie miesięcznej subskrypcji, która odnawia się automatycznie. W każdej chwili możesz zrezygnować bez dodatkowych opłat.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section class="py-20 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="md:flex md:items-center md:space-x-12">
+                <div class="md:w-1/2 mb-10 md:mb-0" data-aos="fade-right">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6">Skontaktuj się z nami</h2>
+                    <p class="text-lg text-gray-600 mb-8">Masz pytania? Chcesz dowiedzieć się więcej o naszej ofercie? Napisz do nas, a nasz zespół chętnie Ci pomoże.</p>
+                    
+                    <div class="space-y-6">
+                        <div class="flex items-start">
+                            <div class="feature-icon flex-shrink-0">
+                                <i class="fas fa-envelope"></i>
+                            </div>
+                            <div class="ml-4">
+                                <h3 class="text-lg font-medium text-gray-900">Email</h3>
+                                <p class="text-gray-600">kontakt@linguaflow.pl</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start">
+                            <div class="feature-icon flex-shrink-0">
+                                <i class="fas fa-phone-alt"></i>
+                            </div>
+                            <div class="ml-4">
+                                <h3 class="text-lg font-medium text-gray-900">Telefon</h3>
+                                <p class="text-gray-600">+48 123 456 789</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start">
+                            <div class="feature-icon flex-shrink-0">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </div>
+                            <div class="ml-4">
+                                <h3 class="text-lg font-medium text-gray-900">Adres</h3>
+                                <p class="text-gray-600">ul. Językowa 15, 00-001 Warszawa</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="md:w-1/2" data-aos="fade-left">
+                    <div class="card p-8">
+                        <form>
+                            <div class="mb-6">
+                                <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Imię i nazwisko</label>
+                                <input type="text" id="name" class="input-field" placeholder="Wprowadź swoje imię i nazwisko">
+                            </div>
+                            
+                            <div class="mb-6">
+                                <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                                <input type="email" id="email" class="input-field" placeholder="Wprowadź swój email">
+                            </div>
+                            
+                            <div class="mb-6">
+                                <label for="subject" class="block text-sm font-medium text-gray-700 mb-1">Temat</label>
+                                <select id="subject" class="input-field">
+                                    <option>Wybierz temat</option>
+                                    <option>Zapytanie o kursy</option>
+                                    <option>Problemy techniczne</option>
+                                    <option>Współpraca</option>
+                                    <option>Inne</option>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-6">
+                                <label for="message" class="block text-sm font-medium text-gray-700 mb-1">Wiadomość</label>
+                                <textarea id="message" rows="4" class="input-field" placeholder="Wprowadź swoją wiadomość"></textarea>
+                            </div>
+                            
+                            <button type="submit" class="btn-primary w-full">
+                                <i class="fas fa-paper-plane mr-2"></i> Wyślij wiadomość
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white pt-16 pb-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-12 mb-12">
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">LinguaFlow</h3>
+                    <p class="text-gray-400">Nowoczesna szkoła językowa online z innowacyjną platformą LMS.</p>
+                    <div class="flex space-x-4 mt-4">
+                        <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-linkedin-in"></i></a>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Kursy</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-white">Angielski</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">Niemiecki</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">Hiszpański</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">Francuski</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">Włoski</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Firma</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-white">O nas</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">Kariera</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">Blog</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">Opinie</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">Kontakt</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Pomoc</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-white">FAQ</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">Warunki użytkowania</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">Polityka prywatności</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">Płatności i zwroty</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">Centrum pomocy</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center">
+                <p class="text-gray-400 mb-4 md:mb-0">© 2023 LinguaFlow Academy. Wszelkie prawa zastrzeżone.</p>
+                <div class="flex space-x-6">
+                    <a href="#" class="text-gray-400 hover:text-white">Polityka prywatności</a>
+                    <a href="#" class="text-gray-400 hover:text-white">Warunki użytkowania</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Back to Top Button -->
+    <button id="back-to-top" class="fixed bottom-8 right-8 bg-indigo-600 text-white p-3 rounded-full shadow-lg opacity-0 invisible transition-all duration-300">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        // Initialize AOS (Animate On Scroll)
+        AOS.init({
+            duration: 800,
+            easing: 'ease-in-out',
+            once: true
+        });
+
+        // Mobile menu toggle
+        const mobileMenuButton = document.querySelector('button[aria-controls="mobile-menu"]');
+        const mobileMenu = document.getElementById('mobile-menu');
+        
+        mobileMenuButton.addEventListener('click', function() {
+            const expanded = this.getAttribute('aria-expanded') === 'true';
+            this.setAttribute('aria-expanded', !expanded);
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        // FAQ toggle
+        const faqToggles = document.querySelectorAll('.faq-toggle');
+        faqToggles.forEach(toggle => {
+            toggle.addEventListener('click', function() {
+                const content = this.nextElementSibling;
+                const icon = this.querySelector('i');
+                
+                content.classList.toggle('hidden');
+                icon.classList.toggle('transform');
+                icon.classList.toggle('rotate-180');
+            });
+        });
+
+        // Back to top button
+        const backToTopButton = document.getElementById('back-to-top');
+        window.addEventListener('scroll', function() {
+            if (window.pageYOffset > 300) {
+                backToTopButton.classList.remove('opacity-0', 'invisible');
+                backToTopButton.classList.add('opacity-100', 'visible');
+            } else {
+                backToTopButton.classList.remove('opacity-100', 'visible');
+                backToTopButton.classList.add('opacity-0', 'invisible');
+            }
+        });
+        
+        backToTopButton.addEventListener('click', function() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+
+        // Demo popup (simplified)
+        document.querySelectorAll('a[href="#demo"]').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                alert('To jest symulacja demo platformy. W pełni funkcjonalna wersja byłaby dostępna po wdrożeniu.');
+            });
+        });
+
+        // Register popup (simplified)
+        document.querySelectorAll('a[href="#register"]').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                alert('Formularz rejestracyjny zostałby tutaj wyświetlony. W pełni funkcjonalna wersja wymagałaby backendu.');
+            });
+        });
+    </script>
 </body>
 </html>
